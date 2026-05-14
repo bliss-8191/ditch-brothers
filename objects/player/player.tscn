@@ -2,6 +2,10 @@
 
 [ext_resource type="Script" uid="uid://blymsh4mbexui" path="res://objects/player/player_control.gd" id="1_4flbx"]
 
+[sub_resource type="Curve" id="Curve_cqmt1"]
+_data = [Vector2(0, 0.25), 0.0, 2.5, 0, 0, Vector2(0.5, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.25), -2.5, 0.0, 0, 0]
+point_count = 3
+
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_37kl0"]
 radius = 0.15332031
 
@@ -10,19 +14,31 @@ margin = 0.0
 height = 0.757
 radius = 0.207
 
+[sub_resource type="SphereShape3D" id="SphereShape3D_cqmt1"]
+
 [node name="CharacterBody3D" type="CharacterBody3D" unique_id=1538485100]
 script = ExtResource("1_4flbx")
+crouch_curve = SubResource("Curve_cqmt1")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1203353513]
+[node name="MainCollisionShape" type="CollisionShape3D" parent="." unique_id=1203353513]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape3D_37kl0")
 
-[node name="ShapeCast3D" type="ShapeCast3D" parent="." unique_id=194692002]
+[node name="SoftShapeCast" type="ShapeCast3D" parent="." unique_id=194692002]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.21, 0)
+enabled = false
 shape = SubResource("CylinderShape3D_37kl0")
+target_position = Vector3(0, 0, 0)
+
+[node name="UncrouchShapeCast" type="ShapeCast3D" parent="." unique_id=1224975957]
+enabled = false
+shape = SubResource("SphereShape3D_cqmt1")
 target_position = Vector3(0, 0, 0)
 
 [node name="Head" type="Node3D" parent="." unique_id=543432955]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.79, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Head" unique_id=2100674098]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14431548, 0)
+near = 0.01
+far = 400.0

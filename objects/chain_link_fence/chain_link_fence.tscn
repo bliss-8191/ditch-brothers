@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://cmuexl18rd2q4"]
 
+[ext_resource type="Shader" uid="uid://8f0d065ehsbl" path="res://objects/chain_link_fence/chain_link_fence_shadow.gdshader" id="2_o2gub"]
 [ext_resource type="ArrayMesh" uid="uid://cojukltuldwfk" path="res://objects/chain_link_fence/chain_link_fence_L0.obj" id="2_w1bmu"]
 [ext_resource type="Shader" uid="uid://cbpw7c6pg7cek" path="res://objects/chain_link_fence/chain_link_fence.gdshader" id="3_w1bmu"]
 [ext_resource type="Texture2D" uid="uid://coycoxbw8hfaj" path="res://objects/chain_link_fence/chain_link_alpha.png" id="4_o2gub"]
@@ -10,7 +11,7 @@
 [sub_resource type="BoxShape3D" id="BoxShape3D_o2gub"]
 size = Vector3(2.4144287, 2.3979187, 0.056396484)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_t8s72"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_w7c6d"]
 render_priority = 0
 shader = ExtResource("3_w1bmu")
 shader_parameter/albedo = Vector3(0.8, 0.8, 0.8)
@@ -25,23 +26,37 @@ albedo_color = Color(0.8, 0.8, 0.8, 1)
 metallic = 1.0
 roughness = 0.5
 
-[node name="StaticBody3D" type="StaticBody3D" unique_id=1557088125]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_t8s72"]
+render_priority = 0
+shader = ExtResource("2_o2gub")
+shader_parameter/alpha = ExtResource("4_o2gub")
+shader_parameter/uv_scale = 1.0
+shader_parameter/shadow_pass_alpha_threshold = 0.25
+
+[node name="ChainLinkFence" type="StaticBody3D" unique_id=1557088125]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1080474303]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2095337, 1.2096405, 0)
 shape = SubResource("BoxShape3D_o2gub")
 
-[node name="MeshInstance3D2" type="MeshInstance3D" parent="." unique_id=883092822]
+[node name="low_lod" type="MeshInstance3D" parent="." unique_id=883092822]
+cast_shadow = 0
 visibility_range_begin = 2.0
 visibility_range_begin_margin = 0.5
 visibility_range_fade_mode = 1
 mesh = ExtResource("2_w1bmu")
-surface_material_override/0 = SubResource("ShaderMaterial_t8s72")
+surface_material_override/0 = SubResource("ShaderMaterial_w7c6d")
 
-[node name="MeshInstance3D3" type="MeshInstance3D" parent="." unique_id=1317333859]
+[node name="high_lod" type="MeshInstance3D" parent="." unique_id=1317333859]
 material_override = SubResource("StandardMaterial3D_o2gub")
+cast_shadow = 0
 visibility_range_end = 2.0
 visibility_range_end_margin = 0.5
 visibility_range_fade_mode = 1
 script = ExtResource("6_5n5jj")
 input = ExtResource("6_w7c6d")
+
+[node name="shadow_caster" type="MeshInstance3D" parent="." unique_id=2200923]
+cast_shadow = 3
+mesh = ExtResource("2_w1bmu")
+surface_material_override/0 = SubResource("ShaderMaterial_t8s72")

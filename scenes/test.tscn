@@ -11,10 +11,8 @@ volumetric_fog_density = 0.3799
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_bl13t"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_37kl0"]
-size = Vector3(1, 1, 4.133232)
-
-[sub_resource type="BoxMesh" id="BoxMesh_8uh7m"]
+[sub_resource type="PlaneMesh" id="PlaneMesh_iyx0m"]
+size = Vector2(1000, 1000)
 
 [node name="Node3D" type="Node3D" unique_id=1385724559]
 
@@ -26,36 +24,56 @@ environment = SubResource("Environment_37kl0")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ground" unique_id=1111994825]
 shape = SubResource("WorldBoundaryShape3D_bl13t")
 
+[node name="MeshInstance3D" type="MeshInstance3D" parent="ground" unique_id=887849621]
+mesh = SubResource("PlaneMesh_iyx0m")
+
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=957789778]
 transform = Transform3D(0.976586, -0.1625679, 0.14089523, 0, 0.6549387, 0.75568205, -0.21512736, -0.73798853, 0.6396039, 0, 3.5965981, 0)
-
-[node name="StaticBody3D3" type="StaticBody3D" parent="." unique_id=1942028564]
-transform = Transform3D(0.94832367, 0, 0.31730464, 0, 1, 0, -0.31730464, 0, 0.94832367, 1.329907, 0.65463686, -3.9327683)
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D3" unique_id=1134032837]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.1525574e-07, 0, -0.0039026737)
-shape = SubResource("BoxShape3D_37kl0")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D3" unique_id=805173447]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 4.125, 0, 0, 0)
-mesh = SubResource("BoxMesh_8uh7m")
-
-[node name="StaticBody3D2" type="StaticBody3D" parent="." unique_id=1307849314]
-transform = Transform3D(0.9766723, 0, -0.21473533, 0, 1, 0, 0.21473533, 0, 0.9766723, 0, 0.66062415, -3.4508815)
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D2" unique_id=945742770]
-transform = Transform3D(1, 0, -5.9604645e-08, 0, 1, 0, 0, 0, 3.98, 0, 0, 0.72132874)
-mesh = SubResource("BoxMesh_8uh7m")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D2" unique_id=1018172274]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.72132874)
-shape = SubResource("BoxShape3D_37kl0")
+shadow_enabled = true
+shadow_bias = 0.02
+shadow_blur = 2.154
 
 [node name="CharacterBody3D" parent="." unique_id=1538485100 instance=ExtResource("1_lpvoh")]
 
 [node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=127337229]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.47513503, 2.0063462, -2.0347257)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.1450305, 2.0063462, -1.9097315)
 omni_range = 1.8125718
 
-[node name="StaticBody3D" parent="." unique_id=1557088125 instance=ExtResource("3_iyx0m")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.900323, 0.08646238, -1.0478657)
+[node name="ChainLinkFence2" parent="." unique_id=1557088125 instance=ExtResource("3_iyx0m")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.153445, 0, -1.9421966)
+
+[node name="ChainLinkFence" parent="." unique_id=984947537 instance=ExtResource("3_iyx0m")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.750741, 0, -1.9378204)
+
+[node name="CSGCombiner3D" type="CSGCombiner3D" parent="." unique_id=1614099579]
+use_collision = true
+
+[node name="CSGBox3D5" type="CSGBox3D" parent="CSGCombiner3D" unique_id=1986079789]
+transform = Transform3D(0.9641649, 0.2653037, 0, -0.2653037, 0.9641649, 0, 0, 0, 1, 6.4596224, 1.8117249, 1.8362532)
+size = Vector3(8.75293, 1, 1)
+
+[node name="CSGBox3D4" type="CSGBox3D" parent="CSGCombiner3D" unique_id=547503390]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.1680436, 1.2555597, 0.9181266)
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="CSGCombiner3D" unique_id=1662712264]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0265598, 2.0437462, 1.1182282)
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="CSGCombiner3D" unique_id=1707912965]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.9109993, 2.4072835, 1.1182282)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="CSGCombiner3D" unique_id=343573562]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.052483, 1.619097, 0.9181266)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1847570359]
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="CanvasLayer" unique_id=849026192]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="SubViewport" type="SubViewport" parent="CanvasLayer/SubViewportContainer" unique_id=143055360]
+handle_input_locally = false
+size = Vector2i(984, 609)
+render_target_update_mode = 4
+
+[node name="Camera3D" type="Camera3D" parent="CanvasLayer/SubViewportContainer/SubViewport" unique_id=18196943]
+transform = Transform3D(0.6848529, 0.28185093, -0.67196447, 0.023305831, 0.91322106, 0.40679747, 0.7283084, -0.29425713, 0.61885345, -1.6452134, 2.2763233, 4.0560107)
