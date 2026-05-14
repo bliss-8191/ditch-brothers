@@ -21,6 +21,8 @@ extends CharacterBody3D
 @export_range(1, 10, 0.1) var sprint_speed: float = 6
 ## Movement speed when crouching (based on current crouch height).
 @export_range(1, 10, 0.1) var crouch_speed: float = 2
+## Movement acceleration factor from crouching (based on current crouch height).
+@export_range(0.1, 1, 0.01) var crouch_accel_factor: float = 1
 ## Movement acceleration when walking.
 @export_range(1, 100, 0.1) var walk_accel: float = 15
 ## Movement acceleration when accelerating past walking speed (toward sprint speed).
@@ -30,17 +32,19 @@ extends CharacterBody3D
 @export_range(0.5, 1.5, 0.01) var crouch_height: float = 1
 ## How quickly the player crouches.
 @export_range(1, 20, 0.01) var crouch_state_speed: float = 8
+## Whether the player automatically crouches when jumping up. (tucks feet in)
+@export var auto_crouch_jump: bool = false
 
 ## How much "character controlled" acceleration effects movement when not grounded.
 ## This also acts as air resistance because the player controller tries to stop moving by default.
-@export_range(0.0, 1.0, 0.01) var player_control_in_air: float = 0.1
+@export_range(0.0, 1.0, 0.01) var player_control_in_air: float = 0.135
 
 ## Expected to send 0-1 to 0-1.
 ## Determines how quickly the player changes crouch state at each given height.
 @export var crouch_curve: Curve
 
 ## The force in which the player jumps.
-@export_range(1, 10, 0.1) var jump_velocity: float = 4.5
+@export_range(1, 10, 0.1) var jump_velocity: float = 3.5
 ## The force in which the player jumps when crouching (based on current crouch height).
 @export_range(0, 10, 0.1) var crouch_jump_velocity: float = 2.5
 
@@ -59,9 +63,9 @@ extends CharacterBody3D
 
 @onready var head := $Head as Node3D
 @onready var camera := $Head/Camera3D as Camera3D
-@onready var soft_collision_shape := $SoftShapeCast as ShapeCast3D
+@onready var soft_collision_shape_cast := $SoftShapeCast as ShapeCast3D
 @onready var hard_collision_shape := $MainCollisionShape as CollisionShape3D
-@onready var uncrouch_collision_shape := $UncrouchShapeCast as ShapeCast3D
+@onready var uncrouch_shape_cast := $UncrouchShapeCast as ShapeCast3D
 
 ## Amount player is currently crouched.
 ## 1 means standing.
@@ -69,8 +73,8 @@ var crouch_amount = 1.0
 @onready var initial_head_height = head.position.y
 # distance from camera to top of hard collision shape
 @onready var head_padding = hard_collision_shape.shape.height - initial_head_height
-@onready var initial_soft_collision_height = soft_collision_shape.shape.height
-@onready var initial_soft_collision_position = soft_collision_shape.position.y
+@onready var initial_soft_collision_height = soft_collision_shape_cast.shape.height
+@onready var initial_soft_collision_position = soft_collision_shape_cast.position.y
 
 ## Target FOV.
 var fov_target = fov
@@ -81,15 +85,12 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _process(delta: float) -> void:
-	print(fov_target, " ", fov_smooth)
 	# fov sprint effect
 	var look = -camera.get_global_transform().basis.z.normalized()
 	# speed only in the look direction
 	var look_only_speed = velocity.dot(look)
 	# use inverse lerp to go from speed to 0-1 range
 	var effect_amount = clamp(inverse_lerp(fov_speed_start, fov_speed_end, look_only_speed), 0, 1)
-	print(" ", fov_speed_start, " ", fov_speed_end, " ", look_only_speed)
-	print(" ", effect_amount)
 	fov_target = lerp(fov, sprint_fov, effect_amount)
 	# animate fov change so it is smoother
 	var dfov = fov_target - fov_smooth
@@ -123,6 +124,7 @@ func _physics_process(delta: float) -> void:
 	for i in range(update_rate_multiplier):
 		_substep_physics_process(sub_delta)
 
+## Smaller time physics steps for more stable player physics.
 func _substep_physics_process(delta: float) -> void:
 	# acceleration from player input
 	velocity += _get_horizontal_acceleration_with_delta(delta)
@@ -136,6 +138,7 @@ func _substep_physics_process(delta: float) -> void:
 
 	_substep_move_and_slide()
 
+## Move and slide wrapper that accounts for substep physics.
 func _substep_move_and_slide() -> void:
 	# move_and_slide does not take in its own time delta
 	# scale velocity to compensate
@@ -143,6 +146,7 @@ func _substep_move_and_slide() -> void:
 	move_and_slide()
 	velocity *= update_rate_multiplier
 
+## Get target velocity according to input (no input means target of zero).
 func _get_attempted_xz_velocity() -> Vector2:
 	# get direction the player is attempting to move
 	var v = Vector2()
@@ -163,6 +167,7 @@ func _get_attempted_xz_velocity() -> Vector2:
 
 	return v * move_speed
 
+## Get horizontal change in velocity given a time delta.
 func _get_horizontal_acceleration_with_delta(delta) -> Vector3:
 	# current horizontal velocity
 	var v = Vector2(velocity.x, velocity.z)
@@ -178,7 +183,9 @@ func _get_horizontal_acceleration_with_delta(delta) -> Vector3:
 		accel_rate = walk_accel
 	# scale down dv based on acceleration settings
 	dv *= clamp(accel_rate * delta, 0, 1) # clamp to prevent overshoot
-	# only let the player control movement when grounded
+	# scale down dv based on crouch acceleration factor
+	dv *= crouch_accel_factor
+	# reduce player control when not grounded
 	if not is_on_floor():
 		dv = player_control_in_air * dv
 	# update with new horizontal velocity
@@ -187,14 +194,14 @@ func _get_horizontal_acceleration_with_delta(delta) -> Vector3:
 ## Get force to push player away from surfaces when they are very close.
 ## This is not the main mechanism for preventing the player from walking through walls.
 func get_soft_collision_force() -> Vector3:
-	soft_collision_shape.force_shapecast_update()
+	soft_collision_shape_cast.force_shapecast_update()
 	var f = Vector3()
-	for i in range(soft_collision_shape.get_collision_count()):
-		var n = soft_collision_shape.global_position - soft_collision_shape.get_collision_point(i)
+	for i in range(soft_collision_shape_cast.get_collision_count()):
+		var n = soft_collision_shape_cast.global_position - soft_collision_shape_cast.get_collision_point(i)
 		# how far into the collision shape the player is
 		var n_len = Vector2(n.x, n.z).length()
 		# convert to 0-1
-		var depth_fraction = inverse_lerp(soft_collision_shape.shape.radius, hard_collision_shape.shape.radius, n_len)
+		var depth_fraction = inverse_lerp(soft_collision_shape_cast.shape.radius, hard_collision_shape.shape.radius, n_len)
 		# custom acceleration curve
 		if n_len > 0.001:
 			n = n * depth_fraction / n_len
@@ -204,10 +211,10 @@ func get_soft_collision_force() -> Vector3:
 		f.z += n.z
 	return f
 
-## Get the amount the player is trying to crouch to.
+## Get the next amount toward where the player is trying to crouch.
 func _get_next_attempted_crouch_amount(delta) -> float:
 	var next_crouch_amount = 0
-	if Input.is_action_pressed("crouch"):
+	if Input.is_action_pressed("crouch") or (auto_crouch_jump and Input.is_action_pressed("jump") and velocity.y > 0):
 		next_crouch_amount = crouch_amount - delta * crouch_state_speed * crouch_curve.sample(crouch_amount)
 	else:
 		next_crouch_amount = crouch_amount + delta * crouch_state_speed * crouch_curve.sample(crouch_amount)
@@ -223,16 +230,16 @@ func _check_head_hit(next_crouch_amount: float) -> float:
 	var start_head_height = lerp(crouch_height, initial_head_height, crouch_amount)
 	var end_head_height = lerp(crouch_height, initial_head_height, next_crouch_amount)
 	# make sweep shape slightly smaller so the main collision shape does not stick on sides
-	uncrouch_collision_shape.shape.radius = hard_collision_shape.shape.radius - hard_collision_shape.shape.margin
-	var start = start_head_height + head_padding - uncrouch_collision_shape.shape.radius
-	var end = end_head_height + head_padding - uncrouch_collision_shape.shape.radius
+	uncrouch_shape_cast.shape.radius = hard_collision_shape.shape.radius - hard_collision_shape.shape.margin
+	var start = start_head_height + head_padding - uncrouch_shape_cast.shape.radius
+	var end = end_head_height + head_padding - uncrouch_shape_cast.shape.radius
 	# set start position for cast
-	uncrouch_collision_shape.position.y = start
+	uncrouch_shape_cast.position.y = start
 	# set target position for cast
-	uncrouch_collision_shape.set_target_position(Vector3(0.0, end - start, 0.0))
+	uncrouch_shape_cast.set_target_position(Vector3(0.0, end - start, 0.0))
 	# perform shape cast
-	uncrouch_collision_shape.force_shapecast_update()
-	return uncrouch_collision_shape.get_closest_collision_safe_fraction()
+	uncrouch_shape_cast.force_shapecast_update()
+	return uncrouch_shape_cast.get_closest_collision_safe_fraction()
 
 ## Get the next crouch amount based on the two preceding functions.
 func _get_next_crouch_amount(delta) -> float:
@@ -243,27 +250,28 @@ func _get_next_crouch_amount(delta) -> float:
 ## This scales collision shapes and moves the camera.
 ## Also changes vertical player position if in mid air.
 func _update_crouch_state(delta: float) -> void:
-	var next_crouch_amount = _get_next_crouch_amount(delta)
-	if crouch_amount == next_crouch_amount:
+	var previous_crouch_amount = crouch_amount
+	crouch_amount = _get_next_crouch_amount(delta)
+	if crouch_amount == previous_crouch_amount:
 		return
 
 	# how far crouch changed this update
-	var crouch_moved = next_crouch_amount - crouch_amount
-	crouch_amount = next_crouch_amount
-	# how far the camera is from feet
+	var crouch_moved = crouch_amount - previous_crouch_amount
+	# how far the camera should be from the feet
 	var head_height = lerp(crouch_height, initial_head_height, crouch_amount)
 	# how much player is scaled down for crouch
 	var crouch_scaling = head_height / initial_head_height
 
 	# move camera
+	var previous_head_height = head.position.y
 	head.position.y = head_height
 	# move and scale main collision shape (or equivalently just scale relative to player origin)
 	hard_collision_shape.shape.height = head.position.y + head_padding
 	hard_collision_shape.position.y = 0.5 * hard_collision_shape.shape.height
 	# move and scale soft collision shape (or equivalently just scale relative to player origin)
-	soft_collision_shape.shape.height = crouch_scaling * initial_soft_collision_height
-	soft_collision_shape.position.y = crouch_scaling * initial_soft_collision_position
+	soft_collision_shape_cast.shape.height = crouch_scaling * initial_soft_collision_height
+	soft_collision_shape_cast.position.y = crouch_scaling * initial_soft_collision_position
 
-	# roughly conserve momentum
+	# change it to scale relative to camera (instead of feet) when mid air
 	if not is_on_floor():
-		position.y -= 0.5 * crouch_moved
+		position.y += previous_head_height - head_height

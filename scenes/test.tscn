@@ -19,6 +19,19 @@ size = Vector2(1000, 1000)
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=164050142]
 environment = SubResource("Environment_37kl0")
 
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=957789778]
+transform = Transform3D(0.976586, -0.1625679, 0.14089523, 0, 0.6549387, 0.75568205, -0.21512736, -0.73798853, 0.6396039, 0, 3.5965981, 0)
+shadow_enabled = true
+shadow_bias = 0.031
+shadow_normal_bias = 2.931
+shadow_blur = 4.962
+directional_shadow_split_1 = 0.333
+directional_shadow_split_2 = 0.508
+directional_shadow_split_3 = 0.733
+directional_shadow_blend_splits = true
+directional_shadow_fade_start = 0.95
+directional_shadow_max_distance = 40.0
+
 [node name="ground" type="StaticBody3D" parent="." unique_id=1846890769]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ground" unique_id=1111994825]
@@ -27,17 +40,7 @@ shape = SubResource("WorldBoundaryShape3D_bl13t")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="ground" unique_id=887849621]
 mesh = SubResource("PlaneMesh_iyx0m")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=957789778]
-transform = Transform3D(0.976586, -0.1625679, 0.14089523, 0, 0.6549387, 0.75568205, -0.21512736, -0.73798853, 0.6396039, 0, 3.5965981, 0)
-shadow_enabled = true
-shadow_bias = 0.02
-shadow_blur = 2.154
-
 [node name="CharacterBody3D" parent="." unique_id=1538485100 instance=ExtResource("1_lpvoh")]
-
-[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=127337229]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.1450305, 2.0063462, -1.9097315)
-omni_range = 1.8125718
 
 [node name="ChainLinkFence2" parent="." unique_id=1557088125 instance=ExtResource("3_iyx0m")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.153445, 0, -1.9421966)
@@ -48,8 +51,24 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.750741, 0, -1.9378204)
 [node name="CSGCombiner3D" type="CSGCombiner3D" parent="." unique_id=1614099579]
 use_collision = true
 
+[node name="CSGBox3D9" type="CSGBox3D" parent="CSGCombiner3D" unique_id=1000347575]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.921859, 0.41231972, -0.7005625)
+size = Vector3(4.361267, 1, 1)
+
 [node name="CSGBox3D5" type="CSGBox3D" parent="CSGCombiner3D" unique_id=1986079789]
 transform = Transform3D(0.9641649, 0.2653037, 0, -0.2653037, 0.9641649, 0, 0, 0, 1, 6.4596224, 1.8117249, 1.8362532)
+size = Vector3(8.75293, 1, 1)
+
+[node name="CSGBox3D6" type="CSGBox3D" parent="CSGCombiner3D" unique_id=700217846]
+transform = Transform3D(0.48537433, 0.8743066, 0, -0.8743066, 0.48537433, 0, 0, 0, 1, 9.383773, 1.844765, 6.998712)
+size = Vector3(8.75293, 1, 1)
+
+[node name="CSGBox3D7" type="CSGBox3D" parent="CSGCombiner3D" unique_id=1771754348]
+transform = Transform3D(0.7013824, 0.7127858, 0, -0.7127858, 0.7013824, 0, 0, 0, 1, 9.383773, 1.844765, 5.7739816)
+size = Vector3(8.75293, 1, 1)
+
+[node name="CSGBox3D8" type="CSGBox3D" parent="CSGCombiner3D" unique_id=768702133]
+transform = Transform3D(0.8682945, 0.4960502, 0, -0.4960502, 0.8682945, 0, 0, 0, 1, 9.383773, 1.8447654, 4.0199523)
 size = Vector3(8.75293, 1, 1)
 
 [node name="CSGBox3D4" type="CSGBox3D" parent="CSGCombiner3D" unique_id=547503390]
@@ -64,7 +83,23 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.9109993, 2.4072835, 1.11822
 [node name="CSGBox3D" type="CSGBox3D" parent="CSGCombiner3D" unique_id=343573562]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.052483, 1.619097, 0.9181266)
 
+[node name="CSGBox3D" type="CSGBox3D" parent="CSGCombiner3D/CSGBox3D" unique_id=1408887624]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.97932, -3.5689046, -0.897853)
+
+[node name="CSGBox3D10" type="CSGBox3D" parent="CSGCombiner3D" unique_id=1300958595]
+transform = Transform3D(0.8894483, 0, -0.45703584, 0, 1, 0, 0.45703584, 0, 0.8894483, 10.921859, 0.41231972, -2.4538453)
+size = Vector3(4.361267, 1, 1)
+
+[node name="CSGBox3D11" type="CSGBox3D" parent="CSGCombiner3D" unique_id=1808441188]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.921859, 0.41231972, -4.765803)
+size = Vector3(4.361267, 1, 1)
+
+[node name="CSGBox3D12" type="CSGBox3D" parent="CSGCombiner3D" unique_id=2041164749]
+transform = Transform3D(0.6847379, 0, -0.7287894, 0, 1, 0, 0.7287894, 0, 0.6847379, 11.372434, 0.41231972, -6.519086)
+size = Vector3(4.361267, 1, 1)
+
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1847570359]
+visible = false
 
 [node name="SubViewportContainer" type="SubViewportContainer" parent="CanvasLayer" unique_id=849026192]
 offset_right = 40.0
@@ -73,7 +108,8 @@ offset_bottom = 40.0
 [node name="SubViewport" type="SubViewport" parent="CanvasLayer/SubViewportContainer" unique_id=143055360]
 handle_input_locally = false
 size = Vector2i(984, 609)
-render_target_update_mode = 4
+render_target_update_mode = 0
 
 [node name="Camera3D" type="Camera3D" parent="CanvasLayer/SubViewportContainer/SubViewport" unique_id=18196943]
 transform = Transform3D(0.6848529, 0.28185093, -0.67196447, 0.023305831, 0.91322106, 0.40679747, 0.7283084, -0.29425713, 0.61885345, -1.6452134, 2.2763233, 4.0560107)
+far = 100.0
