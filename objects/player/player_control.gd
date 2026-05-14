@@ -30,8 +30,12 @@ func _ready():
 func _process(_delta: float):
 	# fov sprint effect
 	var look = -camera.get_global_transform().basis.z.normalized()
-	var look_dir_speed = inverse_lerp(fov_speed_start, fov_speed_end, velocity.dot(look))
-	camera.fov = lerp(fov, sprint_fov, clamp(look_dir_speed, 0, 1))
+	# speed only in the look direction
+	var look_only_speed = velocity.dot(look)
+	# use inverse lerp to go from speed to 0-1 range
+	var effect_amount = clamp(inverse_lerp(fov_speed_start, fov_speed_end, look_only_speed), 0, 1)
+	# set fov based on the 0-1 range
+	camera.fov = lerp(fov, sprint_fov, effect_amount)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
@@ -39,6 +43,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		head.rotation.x = clampf(head.rotation.x - event.relative.y * look_sensitivity,  PI/-2, PI/2)
 
 func _physics_process(delta: float) -> void:
+	# calculate more physics updates for player physics
 	var sub_delta = delta / update_rate_multiplier
 	for i in range(update_rate_multiplier):
 		substep_physics_process(sub_delta)
@@ -52,24 +57,8 @@ func substep_physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = JUMP_VELOCITY
 
-	var move_speed = 0
-	if Input.is_action_pressed("sprint"):
-		move_speed = sprint_speed
-	else:
-		move_speed = walk_speed
-
-	# target input velocity
-	var vxz = Vector2(velocity.x, velocity.z)
-	var iv = get_target_xz_velocity()
-	var dv = move_speed * iv - vxz
-	var accel = 0
-	if velocity.length() > walk_speed:
-		accel = sprint_accel
-	else:
-		accel = walk_accel
-	vxz += dv * clamp(accel * delta, 0, 1)
-	velocity.x = vxz.x
-	velocity.z = vxz.y
+	# acceleration from player input
+	velocity += get_horizontal_acceleration_with_delta(delta)
 
 	# soft collision force
 	var sf = get_soft_collision_force()
@@ -78,18 +67,47 @@ func substep_physics_process(delta: float) -> void:
 	substep_move_and_slide()
 
 func substep_move_and_slide() -> void:
+	# move_and_slide does not take in it's on time delta
+	# scale velocity to compensate
 	velocity /= update_rate_multiplier
 	move_and_slide()
 	velocity *= update_rate_multiplier
 
-func get_target_xz_velocity() -> Vector2:
+func get_attempted_xz_velocity() -> Vector2:
+	# get direction the player is attempting to move
 	var v = Vector2()
 	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var direction := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 	if direction:
 		v.x = direction.x
 		v.y = direction.z
-	return v
+
+	# walk or sprint
+	var move_speed = 0
+	if Input.is_action_pressed("sprint"):
+		move_speed = sprint_speed
+	else:
+		move_speed = walk_speed
+
+	return v * move_speed
+
+func get_horizontal_acceleration_with_delta(delta) -> Vector3:
+	# current horizontal velocity
+	var v = Vector2(velocity.x, velocity.z)
+	# horizontal velocity player is attempting
+	var iv = get_attempted_xz_velocity()
+	# dv is the value needed to go from current velocity to target velocity
+	var dv = iv - v
+	# seperate acceleration when moving fast
+	var accel_rate = 0
+	if velocity.length() > walk_speed:
+		accel_rate = sprint_accel
+	else:
+		accel_rate = walk_accel
+	# scale down dv based on acceleration settings
+	dv *= clamp(accel_rate * delta, 0, 1) # clamp to prevent overshoot
+	# update with new horizontal velocity
+	return Vector3(dv.x, 0.0, dv.y)
 
 func get_soft_collision_force() -> Vector3:
 	# Soft Collision
@@ -97,13 +115,15 @@ func get_soft_collision_force() -> Vector3:
 	var f = Vector3()
 	for i in range(soft_collision_shape.get_collision_count()):
 		var n = soft_collision_shape.global_position - soft_collision_shape.get_collision_point(i)
+		# how far into the collision shape the player is
 		var n_len = Vector2(n.x, n.z).length()
+		# convert to 0-1
 		var depth_fraction = inverse_lerp(soft_collision_shape.shape.radius, hard_collision_shape.shape.radius, n_len)
+		# custom acceleration curve
 		if n_len > 0.001:
 			n = n * pow(depth_fraction, 1) / n_len
 		else:
 			n = 0
-		print(depth_fraction, " ", pow(depth_fraction, 1))
 		f.x += n.x
 		f.z += n.z
 	return f
