@@ -33,10 +33,15 @@ shape = SubResource("BoxShape3D_o2gub")
 
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="." unique_id=883092822]
 visibility_range_begin = 2.0
+visibility_range_begin_margin = 0.5
+visibility_range_fade_mode = 1
 mesh = ExtResource("2_w1bmu")
 surface_material_override/0 = SubResource("ShaderMaterial_t8s72")
 
 [node name="MeshInstance3D3" type="MeshInstance3D" parent="." unique_id=1317333859]
 material_override = SubResource("StandardMaterial3D_o2gub")
+visibility_range_end = 2.0
+visibility_range_end_margin = 0.5
+visibility_range_fade_mode = 1
 script = ExtResource("6_5n5jj")
 input = ExtResource("6_w7c6d")

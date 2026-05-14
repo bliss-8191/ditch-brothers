@@ -10,7 +10,7 @@ uniform sampler2D normal : filter_linear_mipmap_anisotropic, hint_normal, repeat
 uniform float uv_scale = 1;
 
 void fragment() {
-	ALPHA = texture(alpha, uv_scale * UV, 0.5).r;
+	ALPHA *= texture(alpha, uv_scale * UV, 0.5).r;
 	NORMAL_MAP = texture(normal, uv_scale * UV, 0.9).xyz;
 	METALLIC = metallic;
 	ALBEDO = albedo;
